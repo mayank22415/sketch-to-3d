@@ -2,9 +2,11 @@
 
 import './App.css'
 import { Canvas } from '@react-three/fiber'
-import { Sky, GizmoHelper, GizmoViewport, Bvh } from '@react-three/drei'
+// import { Sky, GizmoHelper, GizmoViewport, Bvh } from '@react-three/drei' // <-- Original line for Drei imports
+import { Sky, GizmoHelper, GizmoViewport, Bvh } from '@react-three/drei' // Keep core Drei imports here
+
 import { InfiniteGrid } from '@/components/three/InfiniteGrid'
-import { FirstPersonController } from '@/components/three/FirstPersonController'
+// import { FirstPersonController } from '@/components/three/FirstPersonController' // <-- Original line for FirstPersonController
 import { Perf } from 'r3f-perf'
 import { MeshCreator } from '@/components/three/MeshCreator'
 import { useAppStore } from '@/store/appStore'
@@ -16,35 +18,64 @@ import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js'
 import { useThree } from '@react-three/fiber'
 import { Ocean } from '@/components/three/Ocean'
 import { useObjectStore } from '@/store/appStore'
+import dynamic from 'next/dynamic'; // <-- ADD THIS LINE
+
+// --- Dynamic Imports for Client-Side Only Components ---
+
+// Fix for FaceLandmarker: Only load this component on the client-side.
+// The error "FaceLandmarker' is not exported from '@mediapipe/tasks-vision'"
+// might be a version mismatch, but dynamically loading it often bypasses
+// server-side processing issues that trigger such errors.
+const FaceLandmarker = dynamic(
+  () => import('@react-three/drei').then((mod) => mod.FaceLandmarker),
+  { ssr: false }
+);
+
+// Fix for FirstPersonController (and indirectly nipplejs):
+// The "window is not defined" error from nipplejs, traced back to FirstPersonController,
+// means FirstPersonController needs to be loaded client-side only.
+const ClientSideFirstPersonController = dynamic(
+  () => import('@/components/three/FirstPersonController').then((mod) => mod.FirstPersonController),
+  { ssr: false }
+);
+
+// If you are using the <Text> component from @react-three/drei, and the
+// 'troika-three-text' errors persist, you might need to dynamic import that too.
+// const Text = dynamic(
+//   () => import('@react-three/drei').then((mod) => mod.Text),
+//   { ssr: false }
+// );
+
+// --- Rest of your component (no changes needed below this line for the errors) ---
 
 const FocusDetector = () => {
   const { setUIFocused } = useAppStore()
-  
+
   useEffect(() => {
     const handleFocusChange = () => {
       const activeElement = document.activeElement
       const isInput = activeElement?.tagName === 'INPUT' || activeElement?.tagName === 'TEXTAREA'
       setUIFocused(isInput)
     }
-    
+
     document.addEventListener('focusin', handleFocusChange)
     document.addEventListener('focusout', handleFocusChange)
-    
+
     handleFocusChange()
-    
+
     return () => {
       document.removeEventListener('focusin', handleFocusChange)
       document.removeEventListener('focusout', handleFocusChange)
     }
   }, [setUIFocused])
-  
+
   return null
 }
 
 // Component to manage ocean visibility and grid visibility
 function OceanAndGridManager() {
   const [showOcean, setShowOcean] = useState(false)
-  
+
   useEffect(() => {
     // Check for environment settings on each render
     const checkSettings = () => {
@@ -54,16 +85,16 @@ function OceanAndGridManager() {
         setShowOcean(settings.showOcean)
       }
     }
-    
+
     // Initial check
     checkSettings()
-    
+
     // Set up interval to check periodically for changes
     const intervalId = setInterval(checkSettings, 500)
-    
+
     return () => clearInterval(intervalId)
   }, [])
-  
+
   return (
     <>
       {/* Show Ocean only when enabled */}
@@ -74,7 +105,7 @@ function OceanAndGridManager() {
 
 function ExampleCube() {
   const meshRef = useRef<THREE.Mesh>(null)
-  
+
   useEffect(() => {
     if (meshRef.current) {
       meshRef.current.userData = {
@@ -83,9 +114,9 @@ function ExampleCube() {
       }
     }
   }, [])
-  
+
   return (
-    <mesh 
+    <mesh
       ref={meshRef}
       position={[2, 1, 0]}
     >
@@ -97,7 +128,7 @@ function ExampleCube() {
 
 function ExampleGroup() {
   const groupRef = useRef<THREE.Group>(null)
-  
+
   useEffect(() => {
     if (groupRef.current) {
       groupRef.current.userData = {
@@ -106,9 +137,9 @@ function ExampleGroup() {
       }
     }
   }, [])
-  
+
   return (
-    <group 
+    <group
       ref={groupRef}
       position={[-2, 1, 0]}
     >
@@ -131,13 +162,13 @@ function ExampleGroup() {
 // Component to handle scene export
 function SceneExporter() {
   const { scene } = useThree()
-  
+
   // Store scene reference in a global variable for external access
   useEffect(() => {
     // @ts-ignore - We're adding a custom property to window
     window.__threeScene = scene
   }, [scene])
-  
+
   return null
 }
 
@@ -152,10 +183,10 @@ export default function ThreeJSCanvas({
     if (!scene) return
 
     console.log('Original scene:', scene);
-    
+
     // Create a temporary scene with only user-created objects
     const exportScene = new THREE.Scene();
-    
+
     // Clone only user-created objects
     scene.traverse((object: THREE.Object3D) => {
       if (object.userData && object.userData.isUserCreated === true) {
@@ -164,16 +195,16 @@ export default function ThreeJSCanvas({
         exportScene.add(clonedObject);
       }
     });
-    
+
     // Check if we found any user objects
     if (exportScene.children.length === 0) {
       console.warn('No user-created objects found to export');
       alert('No user-created objects found to export. Try creating some objects first.');
       return;
     }
-    
+
     console.log('Export scene with filtered objects:', exportScene);
-    
+
     const exporter = new GLTFExporter();
     exporter.parse(
       exportScene,
@@ -192,7 +223,7 @@ export default function ThreeJSCanvas({
       { binary: false }
     );
   }
-  
+
   // Function to test importing a GLTF model
   const testGltfImport = async () => {
     try {
@@ -201,13 +232,13 @@ export default function ThreeJSCanvas({
       const sampleModels = [
         'https://img.theapi.app/temp/cd0b9c83-b5e3-4445-8007-b0e4c29d0d9b.glb'
       ];
-      
+
       // Select a random model from the samples
       const randomUrl = sampleModels[Math.floor(Math.random() * sampleModels.length)];
       console.log('Loading GLTF model from:', randomUrl);
-      
+
       const result = await addObjectWithGltf(randomUrl);
-      
+
       if (result) {
         console.log('GLTF import successful:', result);
       } else {
@@ -219,7 +250,7 @@ export default function ThreeJSCanvas({
       alert('Error testing GLTF import: ' + (error as Error).message);
     }
   }
-  
+
   return (
     <>
       <Canvas
@@ -232,7 +263,7 @@ export default function ThreeJSCanvas({
           powerPreference: 'high-performance',
           preserveDrawingBuffer: true,
           // Keep the priority high for this WebGL context
-          antialias: true, 
+          antialias: true,
           // Attempt to make this context more important than others
           failIfMajorPerformanceCaveat: false,
         }}
@@ -240,35 +271,36 @@ export default function ThreeJSCanvas({
         {/* {visible && <Perf position="top-left" />} */}
         <ambientLight intensity={Math.PI / 2} />
         {/* Add directional light for better material rendering */}
-        <directionalLight 
-          position={[10, 10, 5]} 
-          intensity={Math.PI * 2} 
+        <directionalLight
+          position={[10, 10, 5]}
+          intensity={Math.PI * 2}
           castShadow
           shadow-mapSize-width={2048}
           shadow-mapSize-height={2048}
         />
         {/* Add a secondary fill light from opposite direction */}
-        <directionalLight 
-          position={[-5, 5, -2]} 
-          intensity={Math.PI} 
+        <directionalLight
+          position={[-5, 5, -2]}
+          intensity={Math.PI}
           color="#8088ff"
         />
         {/* Add a ground fill light for better overall illumination */}
         <hemisphereLight
-          args={["#ffffff", "#8888ff", 0.7]} 
+          args={["#ffffff", "#8888ff", 0.7]}
           position={[0, 10, 0]}
         />
-        <Sky 
-          distance={450000} 
-          sunPosition={[5, 1, 2]} 
-          inclination={0.1} 
-          azimuth={0.5} 
+        <Sky
+          distance={450000}
+          sunPosition={[5, 1, 2]}
+          inclination={0.1}
+          azimuth={0.5}
           rayleigh={0.5}
           turbidity={10}
           mieCoefficient={0.005}
           mieDirectionalG={0.8}
         />
-        {visible && <FirstPersonController />}
+        {visible && typeof window !== 'undefined' && <ClientSideFirstPersonController />} {/* <-- MODIFIED LINE */}
+        {visible && typeof window !== 'undefined' && <FaceLandmarker />} {/* <-- ADD THIS LINE IF YOU NEED FACELANDMARKER */}
         {visible && <OceanAndGridManager />}
         <Bvh>
           {/* Center pole removed */}
@@ -282,13 +314,13 @@ export default function ThreeJSCanvas({
         {visible && <MeshCreator />}
         {visible && <SceneExporter />}
       </Canvas>
-      
+
       {visible && (
         <>
           <FocusDetector />
           <Crosshair />
           {/* Button to export scene as gltf */}
-          <button 
+          <button
             onClick={exportScene}
             style={{
               position: 'absolute',
@@ -306,9 +338,9 @@ export default function ThreeJSCanvas({
           >
             Export Scene
           </button>
-          
+
           {/* Test button for GLTF import */}
-          {/* <button 
+          {/* <button
             onClick={testGltfImport}
             style={{
               position: 'absolute',
