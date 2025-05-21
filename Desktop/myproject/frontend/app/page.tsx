@@ -1,6 +1,6 @@
 'use client'
 
-import dynamic from 'next/dynamic'
+import dynamic from 'next/dynamic' // <--- ADD THIS LINE
 import './tldraw.css'
 import { Vibe3DCodeButton } from './components/Vibe3DCodeButton'
 import { AutoDrawButton } from './components/AutoDrawButton'
@@ -16,6 +16,13 @@ const Tldraw = dynamic(async () => (await import('@tldraw/tldraw')).Tldraw, {
 	ssr: false,
 })
 
+// Dynamically import FirstPersonController to ensure it's client-side only.
+// This prevents 'window is not defined' errors during server-side rendering.
+const ClientSideFirstPersonController = dynamic(
+	() => import('@/components/three/FirstPersonController').then((mod) => mod.FirstPersonController),
+	{ ssr: false }
+)
+
 const shapeUtils = [PreviewShapeUtil, Model3DPreviewShapeUtil]
 
 type TabType = 'tldraw' | 'threejs'
@@ -28,11 +35,11 @@ interface TabGroupProps {
 const TabGroup = ({ activeTab, setActiveTab }: TabGroupProps) => {
 	return (
 		<div style={{
-			position: 'fixed', 
-			top: '20px', 
-			left: '50%', 
+			position: 'fixed',
+			top: '20px',
+			left: '50%',
 			transform: 'translateX(-50%)',
-			zIndex: 9999999, 
+			zIndex: 9999999,
 			display: 'flex',
 			gap: '6px',
 			padding: '6px',
@@ -40,12 +47,12 @@ const TabGroup = ({ activeTab, setActiveTab }: TabGroupProps) => {
 			backgroundColor: 'white',
 			boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
 		}}>
-			<button 
+			<button
 				style={{
-					padding: '6px 12px', 
-					border: 'none', 
+					padding: '6px 12px',
+					border: 'none',
 					borderRadius: '4px',
-					backgroundColor: activeTab === 'tldraw' ? '#007bff' : '#f0f0f0', 
+					backgroundColor: activeTab === 'tldraw' ? '#007bff' : '#f0f0f0',
 					color: activeTab === 'tldraw' ? 'white' : 'black',
 					cursor: 'pointer',
 					transition: 'background-color 0.2s'
@@ -54,12 +61,12 @@ const TabGroup = ({ activeTab, setActiveTab }: TabGroupProps) => {
 			>
 				2D Canvas
 			</button>
-			<button 
+			<button
 				style={{
-					padding: '6px 12px', 
-					border: 'none', 
+					padding: '6px 12px',
+					border: 'none',
 					borderRadius: '4px',
-					backgroundColor: activeTab === 'threejs' ? '#007bff' : '#f0f0f0', 
+					backgroundColor: activeTab === 'threejs' ? '#007bff' : '#f0f0f0',
 					color: activeTab === 'threejs' ? 'white' : 'black',
 					cursor: 'pointer',
 					transition: 'background-color 0.2s'
@@ -79,22 +86,22 @@ export default function App() {
 		<>
 			<TabGroup activeTab={activeTab} setActiveTab={setActiveTab} />
 			<div className="editor">
-				<div style={{ 
-					position: 'absolute', 
-					width: '100%', 
-					height: '100%', 
+				<div style={{
+					position: 'absolute',
+					width: '100%',
+					height: '100%',
 					visibility: activeTab === 'tldraw' ? 'visible' : 'hidden',
 					zIndex: activeTab === 'tldraw' ? 2 : 1
 				}}>
-					<Tldraw 
-						persistenceKey="vibe-3d-code" 
+					<Tldraw
+						persistenceKey="vibe-3d-code"
 						shareZone={
 							<div style={{ display: 'flex' }}>
 								<Vibe3DCodeButton />
 								<ImproveDrawingButton />
 								<AutoDrawButton />
 							</div>
-						} 
+						}
 						shapeUtils={shapeUtils}
 					>
 						<TldrawLogo />
