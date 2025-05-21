@@ -5,7 +5,6 @@ import {
   BaseBoxShapeUtil,
   DefaultSpinner,
   HTMLContainer,
-  Icon,
   SvgExportContext,
   TLBaseShape,
   TLShape,
@@ -13,6 +12,8 @@ import {
   useIsEditing,
   useToasts,
 } from '@tldraw/tldraw'
+// Add this new import for Icon
+import { Icon } from '@tldraw/editor' // <--- ADD THIS LINE (or potentially @tldraw/ui-legacy or another specific tldraw UI package)
 import { useState, useEffect } from 'react'
 
 export type Model3DPreviewShape = TLBaseShape<
