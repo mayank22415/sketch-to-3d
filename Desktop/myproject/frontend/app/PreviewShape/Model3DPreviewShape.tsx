@@ -11,9 +11,12 @@ import {
   toDomPrecision,
   useIsEditing,
   useToasts,
-} from '@tldraw/tldraw'
+}
 // Add this new import for Icon
-import { Icon } from '@tldraw/editor' // <--- ADD THIS LINE (or potentially @tldraw/ui-legacy or another specific tldraw UI package)
+ import { TldrawIcon } from '@/components/TldrawIcon'
+// ...
+<TldrawIcon name="cross" className="w-4 h-4 text-red-500" />
+// <--- ADD THIS LINE (or potentially @tldraw/ui-legacy or another specific tldraw UI package)
 import { useState, useEffect } from 'react'
 
 export type Model3DPreviewShape = TLBaseShape<
