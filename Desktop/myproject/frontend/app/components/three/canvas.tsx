@@ -1,4 +1,6 @@
-"use client"
+"use client";
+import { Canvas } from '@react-three/fiber';
+// rest of your component
 
 import './App.css'
 import { Canvas } from '@react-three/fiber'
