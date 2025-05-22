@@ -7,8 +7,7 @@ def start_api_server(host=None, port=None, reload=True):
     port = port or settings.API_PORT
     
     print(f"Starting API server at http://{host}:{port}")
-    print("API Documentation available at http://localhost:8000/docs")
-    
+    print(f"API Documentation available at http://{host}:{port}/docs")
     uvicorn.run(
         "app.main:app",
         host=host,
