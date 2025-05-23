@@ -11,8 +11,20 @@ import {
   Loader2,
 } from 'lucide-react'
 
+// Define all valid icon names for stricter type checking
+export type IconName =
+  | 'info'
+  | 'check'
+  | 'cross'
+  | 'cross-2'
+  | 'alert-triangle'
+  | 'alert-circle'
+  | 'circle'
+  | 'square'
+  | 'loader'
+
 interface Props {
-  name: string
+  name: IconName
   className?: string
 }
 
