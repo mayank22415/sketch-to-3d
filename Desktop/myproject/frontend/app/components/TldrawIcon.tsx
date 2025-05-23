@@ -11,7 +11,6 @@ import {
   Loader2,
 } from 'lucide-react'
 
-// Define all valid icon names for stricter type checking
 export type IconName =
   | 'info'
   | 'check'
