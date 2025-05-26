@@ -55,11 +55,7 @@ export async function edit3DCode(
 
     // Turn the SVG into a DataUrl
     const IS_SAFARI = /^((?!chrome|android).)*safari/i.test(navigator.userAgent)
-    const blob = await getSvgAsImage(svg, IS_SAFARI, {
-      type: 'png',
-      quality: 0.8,
-      scale: 1,
-    })
+    const blob = await getSvgAsImage(svg, IS_SAFARI, {type: 'png',quality: 0.8,scale: 1,})
     
     if (!blob) {
       throw Error('Could not generate image from SVG.')
