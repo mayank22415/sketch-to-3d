@@ -6,7 +6,7 @@ import {
 	SvgExportContext,
 	TLBaseShape,
 	Vec,
-	ShapeUtil,
+	BaseBoxShapeUtil, // <-- Added this import
 	stopEventPropagation,
 	toDomPrecision,
 	useIsEditing,
@@ -23,7 +23,7 @@ export type PreviewShape = TLBaseShape<
 	}
 >
 
-export class PreviewShapeUtil extends ShapeUtil<PreviewShape> {
+export class PreviewShapeUtil extends BaseBoxShapeUtil<PreviewShape> {
 	static override type = 'response' as const
 
 	override isAspectRatioLocked = () => false
