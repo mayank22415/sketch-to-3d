@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@radix-ui/react-tabs": "^1.1.3",
-    "@react-three/drei": "^10.0.8",
+    "@react-three/drei": "^9.122.0",
     "@react-three/fiber": "^9.7.0",
     "@react-three/postprocessing": "^2.19.1",
     "@tldraw/tldraw": "^2.0.0-canary.d0f6ef80fcf9",
