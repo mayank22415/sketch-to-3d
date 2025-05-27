@@ -22,8 +22,7 @@ export type PreviewShape = TLBaseShape<
 		h: number
 	}
 >
-
-export class PreviewShapeUtil extends BaseBoxShapeUtil<PreviewShape> {
+export class PreviewShapeUtil extends ShapeUtil<PreviewShape> {
 	static override type = 'response' as const
 
 	override isAspectRatioLocked = () => false
