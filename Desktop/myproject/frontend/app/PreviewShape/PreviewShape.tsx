@@ -1,12 +1,12 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 import {
-	BaseBoxShapeUtil,
 	DefaultSpinner,
 	HTMLContainer,
 	Icon,
 	SvgExportContext,
 	TLBaseShape,
 	Vec,
+	ShapeUtil,
 	stopEventPropagation,
 	toDomPrecision,
 	useIsEditing,
@@ -23,8 +23,14 @@ export type PreviewShape = TLBaseShape<
 	}
 >
 
-export class PreviewShapeUtil extends BaseBoxShapeUtil<PreviewShape> {
+export class PreviewShapeUtil extends ShapeUtil<PreviewShape> {
 	static override type = 'response' as const
+
+	override isAspectRatioLocked = () => false
+	override canResize = () => true
+	override canBind = () => false
+	override canUnmount = () => false
+	override canEdit = () => true
 
 	getDefaultProps(): PreviewShape['props'] {
 		return {
@@ -34,13 +40,15 @@ export class PreviewShapeUtil extends BaseBoxShapeUtil<PreviewShape> {
 		}
 	}
 
-	override canEdit = () => true
-	override isAspectRatioLocked = () => false
-	override canResize = () => true
-	override canBind = () => false
-	override canUnmount = () => false
+	getGeometry(shape: PreviewShape) {
+		return {
+			type: 'rectangle',
+			width: shape.props.w,
+			height: shape.props.h,
+		}
+	}
 
-	override component(shape: PreviewShape) {
+	component(shape: PreviewShape) {
 		const isEditing = useIsEditing(shape.id)
 		const toast = useToasts()
 
@@ -53,12 +61,10 @@ export class PreviewShapeUtil extends BaseBoxShapeUtil<PreviewShape> {
 			[this.editor]
 		)
 
-		// Kind of a hack—we're preventing users from pinching-zooming into the iframe
 		const htmlToUse = shape.props.html.replace(
 			`</body>`,
 			`<script src="https://unpkg.com/html2canvas"></script><script>
-			// send the screenshot to the parent window
-  			window.addEventListener('message', function(event) {
+			window.addEventListener('message', function(event) {
     		if (event.data.action === 'take-screenshot' && event.data.shapeid === "${shape.id}") {
       		html2canvas(document.body, {useCors : true}).then(function(canvas) {
         		const data = canvas.toDataURL('image/png');
@@ -162,9 +168,10 @@ export class PreviewShapeUtil extends BaseBoxShapeUtil<PreviewShape> {
 
 	override toSvg(shape: PreviewShape, _ctx: SvgExportContext): SVGElement | Promise<SVGElement> {
 		const g = document.createElementNS('http://www.w3.org/2000/svg', 'g')
-		// while screenshot is the same as the old one, keep waiting for a new one
+
 		return new Promise((resolve, _) => {
-			if (window === undefined) return resolve(g)
+			if (typeof window === 'undefined') return resolve(g)
+
 			const windowListener = (event: MessageEvent) => {
 				if (event.data.screenshot && event.data?.shapeid === shape.id) {
 					const image = document.createElementNS('http://www.w3.org/2000/svg', 'image')
@@ -177,20 +184,22 @@ export class PreviewShapeUtil extends BaseBoxShapeUtil<PreviewShape> {
 					resolve(g)
 				}
 			}
+
 			const timeOut = setTimeout(() => {
 				resolve(g)
 				window.removeEventListener('message', windowListener)
 			}, 2000)
+
 			window.addEventListener('message', windowListener)
-			//request new screenshot
-			const firstLevelIframe = document.getElementById(`iframe-1-${shape.id}`) as HTMLIFrameElement
-			if (firstLevelIframe) {
-				firstLevelIframe.contentWindow!.postMessage(
+
+			const iframe = document.getElementById(`iframe-1-${shape.id}`) as HTMLIFrameElement
+			if (iframe?.contentWindow) {
+				iframe.contentWindow.postMessage(
 					{ action: 'take-screenshot', shapeid: shape.id },
 					'*'
 				)
 			} else {
-				console.log('first level iframe not found or not accessible')
+				console.log('iframe not found or inaccessible')
 			}
 		})
 	}
@@ -211,18 +220,6 @@ function getRotatedBoxShadow(rotation: number) {
 }
 
 const ROTATING_BOX_SHADOWS = [
-	{
-		offsetX: 0,
-		offsetY: 2,
-		blur: 4,
-		spread: -1,
-		color: '#0000003a',
-	},
-	{
-		offsetX: 0,
-		offsetY: 3,
-		blur: 12,
-		spread: -2,
-		color: '#0000001f',
-	},
+	{ offsetX: 0, offsetY: 2, blur: 4, spread: -1, color: '#0000003a' },
+	{ offsetX: 0, offsetY: 3, blur: 12, spread: -2, color: '#0000001f' },
 ]
